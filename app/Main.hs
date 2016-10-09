@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Speaker
 
 main :: IO ()
 main = startApp
