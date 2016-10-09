@@ -14,9 +14,13 @@ import Control.Lens
 import Data.Monoid
 
 
-type UsersAPI = GetAllUsers :<|> GetUser
-type GetAllUsers = "users" :> Get '[JSON] [User]
-type GetUser = "users" :> Capture "userId" Int :> Get '[JSON] User
+{- 
+ - User API: GET /v/users        -- list all users
+ -           GET /v/users/userId -- get the user with uid userId
+ -}
+type UsersAPI = "v" :> "users" :> (GetAllUsers :<|> GetUser)
+type GetAllUsers = Get '[JSON] [User]
+type GetUser = Capture "userId" Int :> Get '[JSON] User
 
 usersApi :: Server UsersAPI
 usersApi = getAllUsers :<|> getUser
