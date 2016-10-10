@@ -3,9 +3,10 @@ module Speaker
     ( startApp
     ) where
 
+import Speaker.Config
+import Speaker.Utils
 import Speaker.User.Controller
 import Speaker.User.Model
-import Speaker.Config
 import Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -21,7 +22,7 @@ type SpeakerAPI = UsersAPI
 migrations :: [Migration]
 migrations = [migrateUser]
 
-server :: Config -> Server SpeakerAPI
+server :: ServerT SpeakerAPI Speaker
 server = usersApi
 
 startApp :: IO ()
@@ -30,7 +31,7 @@ startApp = withConfig $ \c -> do
   run 8080 (app c)
 
 app :: Config -> Application
-app = serve api . server
+app c = serve api $ enter (runSpeaker c) server
 
 api :: Proxy SpeakerAPI
 api = Proxy

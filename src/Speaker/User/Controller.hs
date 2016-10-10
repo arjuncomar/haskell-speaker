@@ -29,8 +29,8 @@ type UsersAPI = "v" :> "users" :> (GetAllUsers :<|> GetUser)
 type GetAllUsers = Get '[JSON] [User]
 type GetUser = Capture "userId" Int :> Get '[JSON] User
 
-usersApi :: Config -> Server UsersAPI
-usersApi c = enter (runSpeaker c) $ getAllUsers :<|> getUser
+usersApi :: ServerT UsersAPI Speaker
+usersApi = getAllUsers :<|> getUser
 
 getAllUsers :: Speaker [User]
 getAllUsers = runDB getUsersDB
