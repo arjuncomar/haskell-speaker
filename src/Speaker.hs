@@ -13,16 +13,20 @@ import Control.Lens
 import Data.Monoid
 import Database.Persist.Sqlite as S
 import Database.Persist.Postgresql as P
-
+import Control.Applicative
+import Data.Traversable
 
 type SpeakerAPI = UsersAPI
+
+migrations :: [Migration]
+migrations = [migrateUser]
 
 server :: Config -> Server SpeakerAPI
 server = usersApi
 
 startApp :: IO ()
 startApp = withConfig $ \c -> do
-  runMigrationIO c migrateUser
+  sequence_ $ runMigrationIO c <$> migrations
   run 8080 (app c)
 
 app :: Config -> Application

@@ -64,5 +64,5 @@ runMigrationConfig c = case c ^. connType of
   -- The following case should be impossible
   _ -> const . liftIO . throwIO $ userError "Invalid connection type, could not migrate the db."
 
-runMigrationIO :: Config -> Migration -> IO ()
+runMigrationIO :: (MonadIO m, MonadBaseControl IO m) => Config -> Migration -> m ()
 runMigrationIO c m = withResource (c ^. connPool) $ runReaderT (runMigrationConfig c m)
