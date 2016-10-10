@@ -16,9 +16,10 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Speaker
-                     , Speaker.User
-                     , Speaker.UserRepository
-                     , Speaker.UserController
+                     , Speaker.Config
+                     , Speaker.User.Model
+                     , Speaker.User.Repository
+                     , Speaker.User.Controller
                      , Speaker.Utils
   build-depends:       base >= 4.7 && < 5
                      , aeson
@@ -27,6 +28,19 @@ library
                      , warp
                      , lens
                      , bytestring
+                     , persistent
+                     , persistent-postgresql
+                     , persistent-sqlite
+                     , persistent-template
+                     , transformers
+                     , mtl
+                     , resourcet
+                     , ini
+                     , unordered-containers
+                     , text
+                     , monad-logger
+                     , monad-control
+                     , resource-pool
   default-language:    Haskell2010
 
 executable haskell-speaker-exe
