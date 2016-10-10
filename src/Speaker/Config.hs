@@ -58,11 +58,11 @@ withConfig act = runNoLoggingT $ do
           runWithPool act t pool = lift . act $ Config t pool
 
 runMigrationConfig :: MonadIO m => Config -> Migration -> ReaderT SqlBackend m ()
-runMigrationConfig c = case c ^. connType of
+runMigrationConfig c = case c^.connType of
   "postgresql" -> P.runMigration
   "sqlite" -> S.runMigration
   -- The following case should be impossible
   _ -> const . liftIO . throwIO $ userError "Invalid connection type, could not migrate the db."
 
 runMigrationIO :: (MonadIO m, MonadBaseControl IO m) => Config -> Migration -> m ()
-runMigrationIO c m = withResource (c ^. connPool) $ runReaderT (runMigrationConfig c m)
+runMigrationIO c m = withResource (c^.connPool) $ runReaderT (runMigrationConfig c m)
