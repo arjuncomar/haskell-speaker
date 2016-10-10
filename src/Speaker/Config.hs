@@ -8,6 +8,9 @@ module Speaker.Config
     , connPool
     , connType
     , runMigrationIO
+    , ConnType(..)
+    , _Postgresql
+    , _Sqlite
     ) where
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
@@ -27,9 +30,12 @@ import qualified Database.Persist.Sqlite as S
 import qualified Data.Text as Text
 import qualified Data.HashMap.Strict as H
 
+data ConnType = Postgresql | Sqlite deriving (Show, Eq)
+makePrisms ''ConnType
+
 data Config = Config {
-    _connType :: String
-  , _connPool :: ConnectionPool
+    _connType :: ConnType,
+    _connPool :: ConnectionPool
 }
 makeLenses ''Config
 
@@ -38,31 +44,26 @@ makeLenses ''Config
 withConfig :: (MonadBaseControl IO m, MonadIO m) => (Config -> m a) -> m a
 withConfig act = runNoLoggingT $ do
   conf <- liftIO $ readIniFile "./speaker.conf"
-  (connStr, connType, connCount) <- case conf of
-    Left _ -> return (defConnStr, defConnType, read defConnCount)
-    Right iniConf -> do 
-      let connStr = fromConf defConnStr "db.conn.string" iniConf
-      let connType = fromConf defConnType "db.type" iniConf
-      let connCount = read $ fromConf defConnCount "db.pool.size" iniConf
-      return (connStr, connType, connCount)
+  let (connStr, connType, connCount) = either defaultSettings id $ do
+                                          iniConf <- conf
+                                          connStr   <- extractConfValue "db.conn.string" iniConf
+                                          connType  <- extractConfValue "db.type"        iniConf
+                                          connCount <- extractConfValue "db.pool.size"   iniConf
+                                          return (connStr, connType, read connCount) 
 
   case connType of
-    "postgresql" -> P.withPostgresqlPool (fromString connStr) connCount $ runWithPool act connType
-    "sqlite" -> S.withSqlitePool (fromString connStr) connCount $ runWithPool act connType
+    "postgresql" -> P.withPostgresqlPool (fromString connStr) connCount $ runWithPool act Postgresql
+    "sqlite" -> S.withSqlitePool (fromString connStr) connCount $ runWithPool act Sqlite
     _ -> liftIO . throwIO $ userError "Invalid connection type." {- There's no way to gracefully fail here.
                                                                    We can't open the db connection. -}
-    where defConnStr = ":memory:"
-          defConnType = "sqlite"
-          defConnCount = "1"
-          fromConf def key iniConf = either (const def) Text.unpack $ lookupValue "Speaker" key iniConf
-          runWithPool act t pool = lift . act $ Config t pool
-
-runMigrationConfig :: MonadIO m => Config -> Migration -> ReaderT SqlBackend m ()
-runMigrationConfig c = case c^.connType of
-  "postgresql" -> P.runMigration
-  "sqlite" -> S.runMigration
-  -- The following case should be impossible
-  _ -> const . liftIO . throwIO $ userError "Invalid connection type, could not migrate the db."
+    where 
+      runWithPool act t pool = lift . act $ Config t pool
+      defaultSettings = const (":memory:", "sqlite", 1)
+      extractConfValue key iniConf = Text.unpack <$> lookupValue "Speaker" key iniConf
 
 runMigrationIO :: (MonadIO m, MonadBaseControl IO m) => Config -> Migration -> m ()
-runMigrationIO c m = withResource (c^.connPool) $ runReaderT (runMigrationConfig c m)
+runMigrationIO c m = withResource (c^.connPool) $ runReaderT (migrateFunc c m)
+  where
+    migrateFunc c = case c^.connType of
+      Postgresql -> P.runMigration
+      Sqlite -> S.runMigration
