@@ -26,11 +26,8 @@ toByteString = B.toLazyByteString . B.stringUtf8 . show
 
 type Speaker = ReaderT Config Handler
 
-runSpeaker' :: Config -> (forall a. Speaker a -> Handler a)
-runSpeaker' c s = runReaderT s c
-
 runSpeaker :: Config -> Speaker :~> Handler
-runSpeaker c = Nat $ runSpeaker' c
+runSpeaker c = Nat $ flip runReaderT c
 
 runDB :: (MonadBaseControl IO m, MonadReader Config m, MonadIO m) => SqlPersistT m b -> m b
 runDB query = do
