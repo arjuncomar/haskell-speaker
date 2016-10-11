@@ -22,7 +22,6 @@ import Data.Aeson
 import Data.Aeson.TH
 import Database.Persist
 import Database.Persist.TH
-import Database.Persist.Sqlite
 
 share [ mkPersist sqlSettings { mpsGenerateLenses = True }
       , mkMigrate "migrateUser"] [persistLowerCase|
@@ -36,4 +35,3 @@ $(deriveJSON defaultOptions ''User)
 
 mkUser :: String -> String -> User
 mkUser = User
-
