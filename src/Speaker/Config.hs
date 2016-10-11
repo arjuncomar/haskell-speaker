@@ -39,6 +39,12 @@ data Config = Config {
 }
 makeLenses ''Config
 
+-- Utility function, applies two arguments to the second parameter and
+-- passes the result to the first parameter. Also known as (.).(.)
+(.:) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
+f .: g = \x y -> f (g x y)
+infixl 8 .:
+
 -- looks in the same directory as the executable for a config file
 -- named speaker.conf in ini format.
 withConfig :: (MonadBaseControl IO m, MonadIO m) => (Config -> m a) -> m a
@@ -57,12 +63,12 @@ withConfig act = runNoLoggingT $ do
     _ -> liftIO . throwIO $ userError "Invalid connection type." {- There's no way to gracefully fail here.
                                                                    We can't open the db connection. -}
     where 
-      runWithPool act t pool = lift . act $ Config t pool
+      runWithPool act = lift . act .: Config
       defaultSettings = const (":memory:", "sqlite", 1)
-      extractConfValue key iniConf = Text.unpack <$> lookupValue "Speaker" key iniConf
+      extractConfValue = fmap Text.unpack .: lookupValue "Speaker"
 
 runMigrationIO :: (MonadIO m, MonadBaseControl IO m) => Config -> Migration -> m ()
-runMigrationIO c m = withResource (c^.connPool) $ runReaderT (migrateFunc c m)
+runMigrationIO c = withResource (c^.connPool) . runReaderT . migrateFunc c
   where
     migrateFunc c = case c^.connType of
       Postgresql -> P.runMigration
