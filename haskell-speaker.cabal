@@ -20,6 +20,7 @@ library
                      , Speaker.User.Model
                      , Speaker.User.Repository
                      , Speaker.User.Controller
+                     , Speaker.Kudos.Model
                      , Speaker.Utils
   build-depends:       base >= 4.7 && < 5
                      , aeson

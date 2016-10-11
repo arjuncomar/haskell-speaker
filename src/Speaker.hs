@@ -7,6 +7,7 @@ import Speaker.Config
 import Speaker.Utils
 import Speaker.User.Controller
 import Speaker.User.Model
+import Speaker.Kudos.Model
 import Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -20,7 +21,7 @@ import Data.Traversable
 type SpeakerAPI = UsersAPI
 
 migrations :: [Migration]
-migrations = [migrateUser]
+migrations = [migrateUser, migrateKudos]
 
 server :: ServerT SpeakerAPI Speaker
 server = usersApi
