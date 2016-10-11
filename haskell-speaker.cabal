@@ -21,6 +21,9 @@ library
                      , Speaker.User.Repository
                      , Speaker.User.Controller
                      , Speaker.Kudos.Model
+                     , Speaker.Kudos.Repository
+                     , Speaker.Kudos.Controller
+                     , Speaker.Kudos.Category
                      , Speaker.Utils
   build-depends:       base >= 4.7 && < 5
                      , aeson

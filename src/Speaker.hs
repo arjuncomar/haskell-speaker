@@ -1,13 +1,15 @@
 {-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE TypeOperators   #-}
 module Speaker
     ( startApp
     ) where
 
 import Speaker.Config
 import Speaker.Utils
+import Speaker.Kudos.Controller
+import Speaker.Kudos.Model
 import Speaker.User.Controller
 import Speaker.User.Model
-import Speaker.Kudos.Model
 import Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -18,13 +20,13 @@ import Database.Persist.Postgresql as P
 import Control.Applicative
 import Data.Traversable
 
-type SpeakerAPI = UsersAPI
+type SpeakerAPI = "speaker" :> (UsersAPI :<|> KudosAPI)
 
 migrations :: [Migration]
 migrations = [migrateUser, migrateKudos]
 
 server :: ServerT SpeakerAPI Speaker
-server = usersApi
+server = usersApi :<|> kudosApi
 
 startApp :: IO ()
 startApp = withConfig $ \c -> do
