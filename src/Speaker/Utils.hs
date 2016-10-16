@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE Rank2Types #-}
 module Speaker.Utils
     ( toByteString
     , runDB

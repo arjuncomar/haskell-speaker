@@ -3,6 +3,7 @@
 module Speaker.Kudos.Repository
     ( getKudosDB
     , getKudoDB
+    , testKudos
     ) where
 
 import Speaker.Kudos.Category
@@ -16,10 +17,10 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Resource
 import Control.Monad.Logger
 
-kudos :: [Kudos]
-kudos = [ mkKudos "Hey!" 1 2 Teamwork
-        , mkKudos "Hello, hello!" 2 1 Teamwork
-        ]
+testKudos :: [Kudos]
+testKudos = [ mkKudos "Hey!" 1 2 Teamwork
+            , mkKudos "Hello, hello!" 2 1 Teamwork
+            ]
 
 getKudosDB :: (MonadReader Config m, MonadIO m) => SqlPersistT m [Kudos]
 getKudosDB = do

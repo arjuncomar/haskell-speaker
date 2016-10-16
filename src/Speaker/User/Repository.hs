@@ -3,6 +3,7 @@
 module Speaker.User.Repository
     ( getUsersDB
     , getUserDB
+    , testUsers
     ) where
 
 import Speaker.User.Model
@@ -14,13 +15,13 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Resource
 import Control.Monad.Logger
+import Data.Foldable
 
 
-users :: [User]
-users = [ mkUser "Isaac" "Newton"
-        , mkUser "Albert" "Einstein"
-        ]
-
+testUsers :: [User]
+testUsers = [ mkUser "Isaac" "Newton"
+            , mkUser "Albert" "Einstein"
+            ]
 getUsersDB :: (MonadReader Config m, MonadIO m) => SqlPersistT m [User]
 getUsersDB = do
     entities <- selectList [] []
