@@ -5,6 +5,7 @@
 module Speaker.User.Controller
     ( UsersAPI
     , usersApi
+    , usersForbidden
     ) where
 
 import Speaker.User.Model
@@ -32,12 +33,15 @@ type GetUser = Capture "userId" Int :> Get '[JSON] User
 usersApi :: ServerT UsersAPI Speaker
 usersApi = getAllUsers :<|> getUser
 
+usersForbidden :: ServerT UsersAPI Speaker
+usersForbidden = throwError err401 :<|> const (throwError err401)
+
 getAllUsers :: Speaker [User]
 getAllUsers = runDB getUsersDB
 
 getUser :: Int -> Speaker User
 getUser uid = do
-  muser <- runDB $ getUserDB uid
+  muser <- runDB $ getUserById uid
   case muser of
     Just user -> return user
     Nothing -> throwError err404 { 

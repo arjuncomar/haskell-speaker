@@ -4,6 +4,7 @@ module Speaker
     ( startApp
     ) where
 
+import Speaker.Auth
 import Speaker.Config
 import Speaker.Utils
 import Speaker.Kudos.Controller
@@ -13,34 +14,36 @@ import Speaker.User.Controller
 import Speaker.User.Model
 import Speaker.User.Repository
 import Servant
-import Network.Wai
+import Servant.Auth.Server
 import Network.Wai.Handler.Warp
-import Control.Lens
-import Data.Monoid
 import Database.Persist.Sqlite as S
-import Database.Persist.Postgresql as P
-import Control.Applicative
-import Data.Traversable
 import Control.Monad.Trans.Reader(runReaderT)
+import Crypto.JOSE.JWK
 
-type SpeakerAPI = "speaker" :> (UsersAPI :<|> KudosAPI)
+type ProtectedAPI = "speaker" :> (UsersAPI :<|> KudosAPI :<|> LoginAPI)
+type SpeakerAPI auth = Auth auth User :> ProtectedAPI
 
 migrations :: [Migration]
 migrations = [migrateUser, migrateKudos]
 
-server :: ServerT SpeakerAPI Speaker
-server = usersApi :<|> kudosApi
+server :: AuthResult User -> ServerT ProtectedAPI Speaker
+server (Authenticated _) = usersApi :<|> kudosApi :<|> const (return NoContent)
+server _ = usersForbidden :<|> kudosForbidden :<|> login
 
 startApp :: IO ()
-startApp = withConfig $ \c -> do
-  sequence_ $ runMigrationIO c <$> migrations
-  flip runReaderT c . runDB $ do mapM_ insert testUsers
-                                 mapM_ insert testKudos
-  run 8080 (app c)
+startApp = do
+  myKey <- generateKey
+  withConfig $ \c -> do
+    sequence_ $ runMigrationIO c <$> migrations
+    flip runReaderT c . runDB $ do  mapM_ insert testUsers
+                                    mapM_ insert testKudos
+    run 8080 $ app myKey c
 
-app :: Config -> Application
-app c = serve api $ enter (runSpeaker c) server
+app :: JWK -> Config -> Application
+app k c = serveWithContext api (appContext k) $ enter (runSpeaker c) server
 
-api :: Proxy SpeakerAPI
+api :: Proxy (SpeakerAPI '[JWT])
 api = Proxy
 
+appContext :: JWK -> Context '[CookieSettings, JWTSettings]
+appContext k = defaultCookieSettings :. defaultJWTSettings k :. EmptyContext

@@ -12,10 +12,12 @@ module Speaker.Kudos.Model
     , kudosAuthor
     , kudosContent
     , kudosRecipient
+    , kudosCategory
     , mkKudos
     , migrateKudos
     ) where
 
+import Speaker.Utils
 import Speaker.User.Model
 import Speaker.Kudos.Category
 import Control.Lens
@@ -25,11 +27,12 @@ import Database.Persist
 import Database.Persist.TH
 import Database.Persist.Sqlite
 import Data.Function
+import qualified Data.Text as T
 
-share [ mkPersist sqlSettings { mpsGenerateLenses = True }
+share [ mkPersist speakerSqlSettings
       , mkMigrate "migrateKudos"] [persistLowerCase|
   Kudos
-    content String
+    content T.Text
     author UserId
     recipient UserId
     category Category
@@ -38,5 +41,5 @@ share [ mkPersist sqlSettings { mpsGenerateLenses = True }
 
 $(deriveJSON defaultOptions ''Kudos)
 
-mkKudos :: String -> Int -> Int -> Category -> Kudos
+mkKudos :: T.Text -> Int -> Int -> Category -> Kudos
 mkKudos content = Kudos content `on` toSqlKey . fromIntegral 

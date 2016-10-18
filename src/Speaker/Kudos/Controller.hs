@@ -5,6 +5,7 @@
 module Speaker.Kudos.Controller
     ( KudosAPI
     , kudosApi
+    , kudosForbidden
     ) where
 
 import Speaker.Kudos.Model
@@ -22,8 +23,8 @@ import Data.Function
 
 
 {- 
- - Kudos API: GET /v/kudos        -- list all kudos
- -           GET /v/kudos/kudoId  -- get the kudo with kid kudoId
+ - Kudos API: GET /v/kudos         -- list all kudos
+ -            GET /v/kudos/kudoId  -- get the kudo with kid kudoId
  -}
 type KudosAPI = "v" :> "kudos" :> (GetAllKudos :<|> GetKudos)
 type GetAllKudos = Get '[JSON] [Kudos]
@@ -31,6 +32,9 @@ type GetKudos = Capture "kudosId" Int :> Get '[JSON] Kudos
 
 kudosApi :: ServerT KudosAPI Speaker
 kudosApi = getAllKudos :<|> getKudos
+
+kudosForbidden :: ServerT KudosAPI Speaker
+kudosForbidden = throwError err401 :<|> const (throwError err401)
 
 getAllKudos :: Speaker [Kudos]
 getAllKudos = runDB getKudosDB

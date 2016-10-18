@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.2
+resolver: lts-7.4
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -36,10 +36,13 @@ resolver: lts-7.2
 # non-dependency (i.e. a user package), and its test suites and benchmarks
 # will not be run. This is useful for tweaking upstream packages.
 packages:
-- '.'
+  - location: '.'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+  - servant-auth-0.2.0.0
+  - servant-auth-server-0.2.0.0
+  - jose-0.5.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

@@ -11,27 +11,38 @@ module Speaker.User.Model
     ( User
     , userFirstName
     , userLastName
+    , userEmail
+    , userPassword
     , mkUser
     , UserId(..)
     , EntityField(..)
     , migrateUser
+    , Unique(..)
     ) where
 
+import Speaker.Utils
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.TH
 import Database.Persist
 import Database.Persist.TH
+import qualified Data.Text as T
+import Servant.Auth.Server
 
-share [ mkPersist sqlSettings { mpsGenerateLenses = True }
+share [ mkPersist speakerSqlSettings
       , mkMigrate "migrateUser"] [persistLowerCase|
   User
-    firstName String
-    lastName  String
+    firstName T.Text
+    lastName  T.Text
+    email     T.Text
+    password  T.Text
+    UniqueEmail email
     deriving Show
 |]
 
 $(deriveJSON defaultOptions ''User)
+instance ToJWT User
+instance FromJWT User
 
-mkUser :: String -> String -> User
+mkUser :: T.Text -> T.Text -> T.Text -> T.Text -> User
 mkUser = User
